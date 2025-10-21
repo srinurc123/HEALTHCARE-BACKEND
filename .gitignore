@@ -1,0 +1,27 @@
+# Eclipse project files
+/.classpath
+/.project
+/.settings/
+
+# Maven build output
+/target/
+
+# Log files
+*.log
+
+# Ignore application.properties with sensitive data
+/src/main/resources/application.properties
+
+# Eclipse launch configurations
+*.launch
+
+# Maven Wrapper jar
+.mvn/wrapper/maven-wrapper.jar
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
