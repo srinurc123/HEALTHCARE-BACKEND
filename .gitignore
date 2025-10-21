@@ -9,8 +9,7 @@
 # Log files
 *.log
 
-# Ignore application.properties with sensitive data
-/src/main/resources/application.properties
+
 
 # Eclipse launch configurations
 *.launch
