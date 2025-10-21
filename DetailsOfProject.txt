@@ -1,0 +1,1276 @@
+Healthcare Appointment System - Step-by-Step Baby-Feeding Style Explanation
+SCENARIO 1: Sarah's Journey - From Headache to Treatment
+Starting Point
+Sarah is 32 years old. She has been having bad headaches for 2 weeks. She decides to see a doctor.
+
+STEP 1: Opening the App
+What Sarah does: Opens the healthcare app on her phone. Sees two buttons: "Login" and "Sign Up". She has never used this app before, so she clicks "Sign Up".
+
+What happens behind the scenes:
+
+App opens signup form
+
+Sarah's phone is ready to send data to the server
+
+STEP 2: Creating Account (Signup)
+What Sarah does:
+
+Enters email: sarah@email.com
+
+Creates password: MyPass123
+
+Types first name: Sarah
+
+Types last name: Johnson
+
+Enters phone: 9876543210
+
+Selects role: Patient
+
+Clicks "Create Account" button
+
+Her phone sends this to server:
+
+text
+Hey Server! I want to create a new account!
+POST http://localhost:8080/api/v1/auth/signup
+
+Here is the data:
+email: sarah@email.com
+password: MyPass123
+firstName: Sarah
+lastName: Johnson
+phone: 9876543210
+role: PATIENT
+Server receives request:
+
+AuthController catches the request (like a receptionist catching your form)
+
+Says: "Let me check if this email is already used"
+
+AuthService checks database: "Is sarah@email.com already registered?"
+
+Database says: "No, this email is new"
+
+AuthService says: "Good! Now let me make her password secure"
+
+Takes password "MyPass123" and scrambles it using BCrypt
+
+Result: "$2a$10$xyz123abc..." (unreadable scrambled text)
+
+PatientRepository says: "Let me save this to database"
+
+Creates new row in patients table:
+
+text
+ID: 1 (auto-generated)
+Email: sarah@email.com
+Password: $2a$10$xyz123abc...
+First Name: Sarah
+Last Name: Johnson
+Phone: 9876543210
+Role: PATIENT
+Database saves it
+
+Server sends back to Sarah's phone:
+
+text
+Success! Account created!
+You can now login.
+Sarah sees: "Account created successfully! Please login."
+
+STEP 3: Logging In
+What Sarah does:
+
+Goes back to login screen
+
+Enters email: sarah@email.com
+
+Enters password: MyPass123
+
+Clicks "Login"
+
+Her phone sends:
+
+text
+Hey Server! Let me login!
+POST http://localhost:8080/api/v1/auth/login
+
+email: sarah@email.com
+password: MyPass123
+Server receives login request:
+
+AuthController catches it
+
+AuthService says: "Let me verify this person"
+
+Goes to database: "Find user with email sarah@email.com"
+
+Database returns: User found! Here's the stored password: $2a$10$xyz123abc...
+
+AuthService takes what Sarah typed: "MyPass123"
+
+Scrambles it the same way: "$2a$10$xyz123abc..."
+
+Compares: Does "$2a$10$xyz123abc..." = "$2a$10$xyz123abc..." ?
+
+Yes! Match found!
+
+JwtTokenProvider says: "She's real! Let me create a special pass for her"
+
+Creates JWT token:
+
+Takes Sarah's ID: 1
+
+Takes her email: sarah@email.com
+
+Takes her role: PATIENT
+
+Adds current time
+
+Adds expiry time (24 hours from now)
+
+Signs it with secret key (like a stamp)
+
+Token looks like: "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwi..."
+
+Server sends back:
+
+text
+Login successful!
+Here's your special pass (token):
+eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIxIiwi...
+Your ID: 1
+Your role: PATIENT
+Sarah's phone saves the token (like keeping a ticket in your pocket)
+
+Sarah sees: "Welcome Sarah!" and enters main screen
+
+STEP 4: Searching for Doctor
+What Sarah does:
+
+Sees search box: "What kind of doctor do you need?"
+
+Types: "Neurology" (for her headaches)
+
+Clicks "Search"
+
+Her phone sends:
+
+text
+Hey Server! Show me neurologists!
+GET http://localhost:8080/api/v1/doctors/search?specialization=Neurology
+
+Special pass (token):
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9...
+Server receives search request:
+
+JwtAuthenticationFilter (security guard) checks the token first:
+
+"Is this token valid?"
+
+Checks signature: ✓ Valid
+
+Checks expiry: Not expired ✓
+
+Reads token: This is Sarah, ID=1, Role=PATIENT ✓
+
+"Okay, she can proceed"
+
+Request reaches DoctorController
+
+DoctorController says: "Let me find neurologists"
+
+DoctorService asks DoctorRepository: "Give me all doctors where specialization = Neurology"
+
+DoctorRepository goes to database:
+
+sql
+SELECT * FROM doctors WHERE specialization = 'Neurology'
+Database returns 2 doctors:
+
+text
+Doctor 1: ID=5, Name: Dr. Robert Mitchell
+Doctor 2: ID=12, Name: Dr. Emily Chen
+Server sends back to Sarah:
+
+text
+Found 2 neurologists!
+1. Dr. Robert Mitchell (ID: 5)
+2. Dr. Emily Chen (ID: 12)
+Sarah sees: List showing two doctors with their photos and ratings
+
+Sarah clicks on: Dr. Robert Mitchell (she likes his 4.7 star rating)
+
+STEP 5: Checking Doctor's Available Times
+What Sarah does:
+
+On Dr. Mitchell's profile
+
+Selects date: Tomorrow (October 20, 2025)
+
+Clicks "Check Availability"
+
+Her phone sends:
+
+text
+Hey Server! When is Dr. Mitchell free tomorrow?
+GET http://localhost:8080/api/v1/availability/doctor/5?date=2025-10-20T00:00:00
+
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9...
+Server receives availability request:
+
+JwtAuthenticationFilter checks token: ✓ Valid (Sarah confirmed)
+
+Request reaches AvailabilityController
+
+AvailabilityController says: "Let me check the schedule"
+
+CacheService first checks Redis (super fast memory storage):
+
+Key: "doctor:availability:5"
+
+Searches: Is this doctor's schedule already cached?
+
+Result: NOT FOUND (cache miss)
+
+Since not in cache, AvailabilityService says: "Let me check database"
+
+AvailabilitySlotRepository queries MySQL:
+
+sql
+SELECT * FROM availability_slots 
+WHERE doctor_id = 5 
+AND date = '2025-10-20'
+AND status = 'AVAILABLE'
+ORDER BY start_time
+Database returns slots:
+
+text
+Slot 1: 09:00-09:30 AVAILABLE
+Slot 2: 09:30-10:00 AVAILABLE
+Slot 3: 10:00-10:30 AVAILABLE
+Slot 4: 10:30-11:00 BOOKED (someone already took this)
+Slot 5: 14:00-14:30 AVAILABLE
+Slot 6: 14:30-15:00 AVAILABLE
+CacheService saves this to Redis for 30 minutes:
+
+Key: "doctor:availability:5"
+
+Value: [list of available slots]
+
+"Next person who asks about Dr. Mitchell will get instant answer!"
+
+Server sends to Sarah:
+
+text
+Dr. Mitchell is available at:
+- 9:00 AM - 9:30 AM
+- 9:30 AM - 10:00 AM
+- 10:00 AM - 10:30 AM
+- 2:00 PM - 2:30 PM
+- 2:30 PM - 3:00 PM
+Sarah sees: Calendar with green (available) and gray (booked) time slots
+
+Sarah selects: 9:30 AM slot
+
+STEP 6: Booking the Appointment
+What Sarah does:
+
+Selected time: 9:30 AM
+
+Clicks "Book Appointment" button
+
+Sees loading spinner
+
+Her phone sends:
+
+text
+Hey Server! Book me an appointment!
+POST http://localhost:8080/api/v1/appointments/book
+
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9...
+patientId: 1
+doctorId: 5
+time: 2025-10-20T09:30:00
+Server receives booking request (Critical operation!):
+
+JwtAuthenticationFilter checks token: ✓ Valid
+
+AppointmentController receives request
+
+AppointmentController verifies: "Is the person booking (Sarah, ID=1) same as patientId in request?" Yes ✓
+
+AppointmentService starts processing:
+
+Step 4a - Fetch Patient:
+
+Goes to PatientRepository
+
+"Get me patient with ID=1"
+
+Database returns Sarah's full record
+
+✓ Found
+
+Step 4b - Fetch Doctor:
+
+Goes to DoctorRepository
+
+"Get me doctor with ID=5"
+
+Database returns Dr. Mitchell's record
+
+✓ Found
+
+Step 4c - Critical Check (Prevent Double-Booking):
+
+@Transactional begins (database transaction starts)
+
+Locks the time slot (nobody else can book it right now)
+
+AppointmentRepository queries:
+
+sql
+SELECT * FROM appointments 
+WHERE doctor_id = 5 
+AND appointment_time BETWEEN '2025-10-20 09:00:00' AND '2025-10-20 10:00:00'
+AND status != 'CANCELLED'
+This checks if anyone booked between 9:00-10:00 AM
+
+Database returns: No appointments found ✓
+
+Slot is FREE!
+
+Step 4d - Create Appointment:
+
+Creates new Appointment object:
+
+text
+Patient: Sarah (ID=1)
+Doctor: Dr. Mitchell (ID=5)
+Time: 2025-10-20 09:30:00
+Status: PENDING
+AppointmentRepository saves to database
+
+Database auto-generates ID: 501
+
+Record created:
+
+text
+appointments table:
+ID: 501
+patient_id: 1
+doctor_id: 5
+appointment_time: 2025-10-20 09:30:00
+status: PENDING
+created_at: 2025-10-18 17:35:00
+created_by: 1 (Sarah's ID)
+Step 4e - Update Slot Status:
+
+AvailabilitySlotRepository finds the 9:30 AM slot
+
+Changes status from AVAILABLE to BOOKED
+
+text
+availability_slots table:
+slot_id: 102
+status: AVAILABLE → BOOKED
+Step 4f - Clear Cache:
+
+CacheService goes to Redis
+
+Deletes key: "doctor:availability:5"
+
+"Next person checking Dr. Mitchell will get fresh data from database"
+
+Step 4g - Transaction Commit:
+
+All changes saved permanently
+
+Lock released
+
+EmailService (runs in background, doesn't slow down response):
+
+Creates email:
+
+text
+To: sarah@email.com
+Subject: Appointment Confirmed
+
+Dear Sarah Johnson,
+
+Your appointment with Dr. Robert Mitchell (Neurology) 
+is confirmed for October 20, 2025 at 9:30 AM.
+
+Appointment ID: #501
+Location: City Hospital, Room 305
+
+Please arrive 10 minutes early.
+JavaMailSender sends email
+
+Server sends back to Sarah (immediately):
+
+text
+Booking Successful!
+
+Appointment Details:
+ID: 501
+Doctor: Dr. Robert Mitchell
+Specialization: Neurology
+Date: October 20, 2025
+Time: 9:30 AM
+Status: PENDING
+
+Confirmation email sent to sarah@email.com
+Sarah sees:
+
+Success message with green checkmark
+
+Appointment details
+
+"Add to Calendar" button
+
+Sarah's email inbox (few seconds later):
+
+New email: "Appointment Confirmed"
+
+STEP 7: Next Day - Appointment Reminder
+Background Process Running on Server:
+Every day at 9:00 AM, AppointmentReminderScheduler wakes up automatically:
+
+Scheduler says: "What's today's date? October 19, 2025"
+
+Calculates: "Tomorrow is October 20, 2025"
+
+AppointmentRepository queries:
+
+sql
+SELECT * FROM appointments 
+WHERE appointment_time BETWEEN '2025-10-20 00:00:00' AND '2025-10-20 23:59:59'
+AND status = 'CONFIRMED'
+Finds Sarah's appointment (ID=501) and 141 other appointments
+
+For each appointment:
+
+Get patient email
+
+EmailService sends reminder:
+
+text
+To: sarah@email.com
+Subject: Reminder: Doctor Appointment Tomorrow
+
+Dear Sarah,
+
+This is a friendly reminder about your appointment tomorrow:
+
+Doctor: Dr. Robert Mitchell
+Time: 9:30 AM
+Date: Tomorrow, October 20, 2025
+
+See you soon!
+Sarah receives email at 9:00 AM: Reminder about tomorrow's appointment
+
+STEP 8: Appointment Day - Sarah Arrives at Hospital
+Sarah arrives at City Hospital, Room 305 at 9:20 AM (10 minutes early as instructed)
+
+Dr. Mitchell's Screen (he logged into doctor portal):
+
+Shows today's schedule
+
+Sees Sarah's name at 9:30 AM slot
+
+STEP 9: Doctor Examines Sarah
+Dr. Mitchell examines Sarah, asks questions, checks blood pressure, etc.
+
+After examination, Dr. Mitchell sits at his computer.
+
+STEP 10: Doctor Creates Medical Record
+What Dr. Mitchell does:
+
+Opens Sarah's profile in system
+
+Clicks "Create Medical Record"
+
+Fills form:
+
+Symptoms: Persistent headaches for 2 weeks, sensitivity to light, nausea
+
+Diagnosis: Migraine headaches with aura
+
+Blood Pressure: 120/80
+
+Temperature: 98.6 F
+
+Notes: Stress-related triggers. Recommended lifestyle changes and medication.
+
+Clicks "Save Record"
+
+Doctor's computer sends:
+
+text
+Hey Server! Save this medical record!
+POST http://localhost:8080/api/v1/medical-records
+
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9... (Dr. Mitchell's token)
+
+patientId: 1
+doctorId: 5
+appointmentId: 501
+symptoms: Persistent headaches for 2 weeks, sensitivity to light, nausea
+diagnosis: Migraine headaches with aura
+bloodPressure: 120/80
+temperature: 98.6 F
+notes: Stress-related triggers. Recommended lifestyle changes and medication.
+Server receives medical record request:
+
+JwtAuthenticationFilter checks token
+
+Extracts: This is Dr. Mitchell, ID=5, Role=DOCTOR ✓
+
+MedicalRecordController receives request
+
+Checks @PreAuthorize("hasRole('DOCTOR')"):
+
+"Does this person have DOCTOR role?"
+
+Yes, Dr. Mitchell is DOCTOR ✓
+
+"Allowed to proceed"
+
+MedicalRecordService creates record:
+
+text
+MedicalRecord object:
+Patient: Sarah (ID=1)
+Doctor: Dr. Mitchell (ID=5)
+Appointment: 501
+Symptoms: (as entered)
+Diagnosis: Migraine headaches with aura
+Blood Pressure: 120/80
+... other fields
+MedicalRecordRepository saves to database:
+
+text
+medical_records table:
+ID: 87 (auto-generated)
+patient_id: 1
+doctor_id: 5
+appointment_id: 501
+record_date: 2025-10-20
+diagnosis: Migraine headaches with aura
+symptoms: Persistent headaches for 2 weeks...
+blood_pressure: 120/80
+created_at: 2025-10-20 09:45:00
+created_by: 5 (Dr. Mitchell's ID) ← Audit trail!
+Server responds:
+
+text
+Medical record saved successfully!
+Record ID: 87
+Dr. Mitchell sees: "Record saved" confirmation
+
+STEP 11: Doctor Writes Prescription
+What Dr. Mitchell does:
+
+Clicks "Write Prescription"
+
+Fills form:
+
+Medication 1: Sumatriptan 50mg
+
+Medication 2: Ibuprofen 400mg
+
+Dosage: Sumatriptan - 1 tablet at onset of migraine, max 2/day. Ibuprofen - 1 tablet every 6 hours as needed
+
+Instructions: Take Sumatriptan at first sign of migraine. Avoid stress and lack of sleep. Follow up in 2 weeks.
+
+Duration: 14 days
+
+Clicks "Save Prescription"
+
+Doctor's computer sends:
+
+text
+POST http://localhost:8080/api/v1/prescriptions
+Authorization: Bearer doctor_token
+
+patientId: 1
+doctorId: 5
+appointmentId: 501
+medications: Sumatriptan 50mg, Ibuprofen 400mg
+dosage: (as above)
+instructions: (as above)
+durationDays: 14
+Server processes:
+
+Validates Dr. Mitchell is DOCTOR ✓
+
+Creates prescription record
+
+Saves to database:
+
+text
+prescriptions table:
+ID: 23
+patient_id: 1
+doctor_id: 5
+medications: Sumatriptan 50mg, Ibuprofen 400mg
+dosage: ...
+duration_days: 14
+created_at: 2025-10-20 09:50:00
+created_by: 5
+EmailService sends to Sarah:
+
+text
+To: sarah@email.com
+Subject: Your Prescription is Ready
+
+Dear Sarah,
+
+Dr. Robert Mitchell has issued a prescription for you.
+Login to your account to view and download it.
+
+Medications:
+- Sumatriptan 50mg
+- Ibuprofen 400mg
+
+Duration: 14 days
+Dr. Mitchell sees: "Prescription saved"
+
+Sarah's phone (notification): "New prescription available"
+
+STEP 12: Doctor Marks Appointment Complete
+What Dr. Mitchell does:
+
+In Sarah's appointment row
+
+Clicks "Mark Complete"
+
+Computer sends:
+
+text
+PUT http://localhost:8080/api/v1/appointments/501/complete
+Authorization: Bearer doctor_token
+Server processes:
+
+Fetches appointment 501
+
+Verifies Dr. Mitchell is the doctor for this appointment ✓
+
+Changes status:
+
+text
+appointments table:
+ID: 501
+status: PENDING → COMPLETED
+Updates database
+
+EmailService sends to Sarah:
+
+text
+To: sarah@email.com
+Subject: Appointment Completed
+
+Dear Sarah,
+
+Your appointment with Dr. Robert Mitchell is now complete.
+You can view your medical record and prescription in your account.
+
+We hope you feel better soon!
+Sarah receives email: "Appointment completed"
+
+STEP 13: Sarah Views Her Records at Home
+What Sarah does (later that evening):
+
+Opens app
+
+Goes to "My Medical Records"
+
+Sees new record from today
+
+Her phone sends:
+
+text
+GET http://localhost:8080/api/v1/medical-records/patient/1
+Authorization: Bearer sarah_token
+Server processes:
+
+Checks token - This is Sarah, ID=1 ✓
+
+Checks: Is Sarah requesting her own records (patientId=1)? Yes ✓
+
+Security rule: "Patients can only see their own records" ✓ Passed
+
+MedicalRecordRepository queries:
+
+sql
+SELECT * FROM medical_records WHERE patient_id = 1
+ORDER BY record_date DESC
+Returns all Sarah's records
+
+Sarah sees:
+
+text
+Medical Record - October 20, 2025
+Doctor: Dr. Robert Mitchell (Neurology)
+Diagnosis: Migraine headaches with aura
+Symptoms: Persistent headaches, light sensitivity...
+Blood Pressure: 120/80
+Notes: Stress-related. Lifestyle changes recommended.
+Sarah also clicks "Prescriptions":
+
+Sees: Sumatriptan 50mg, Ibuprofen 400mg
+
+Duration: 14 days
+
+Can download PDF
+
+STEP 14: Sarah Leaves a Review
+What Sarah does:
+
+Very happy with Dr. Mitchell
+
+Clicks "Rate Doctor"
+
+Gives 5 stars
+
+Writes: "Excellent doctor! Very thorough examination and clear explanation. Highly recommend."
+
+Clicks "Submit Review"
+
+Her phone sends:
+
+text
+POST http://localhost:8080/api/v1/reviews
+Authorization: Bearer sarah_token
+
+patientId: 1
+doctorId: 5
+appointmentId: 501
+rating: 5
+comment: Excellent doctor! Very thorough...
+Server processes:
+
+Validates Sarah is PATIENT ✓
+
+Checks appointment 501 is COMPLETED ✓
+
+Checks Sarah was patient in appointment 501 ✓
+
+Checks no review exists for appointment 501 yet ✓
+
+Checks rating is between 1-5 ✓
+
+Creates review:
+
+text
+reviews table:
+ID: 34
+patient_id: 1
+doctor_id: 5
+appointment_id: 501
+rating: 5
+comment: Excellent doctor! Very thorough...
+created_at: 2025-10-20 20:15:00
+ReviewRepository calculates Dr. Mitchell's new average:
+
+sql
+SELECT AVG(rating) FROM reviews WHERE doctor_id = 5
+Result: 4.7 (based on all 88 reviews now)
+
+Dr. Mitchell's profile now shows: ⭐ 4.7 / 5.0 (88 reviews)
+
+SCENARIO 2: What If Another Patient Tries to Book Same Slot?
+Setup
+Sarah is booking 9:30 AM slot.
+At the exact same time, another patient John also tries booking same slot.
+
+Timeline (Milliseconds Matter!)
+09:29:58.100 - Sarah clicks "Book"
+09:29:58.156 - John clicks "Book"
+
+09:29:58.200 - Sarah's request reaches server
+09:29:58.256 - John's request reaches server (56ms later)
+
+Sarah's Request Processing:
+09:29:58.210 - Token validated ✓
+
+09:29:58.220 - Patient and doctor fetched ✓
+
+09:29:58.230 - @Transactional begins
+
+09:29:58.231 - Database row LOCKED (nobody else can check this time slot now)
+
+09:29:58.240 - Check if slot free: "SELECT... WHERE time = 9:30"
+
+09:29:58.245 - Result: No appointments found, slot FREE ✓
+
+09:29:58.250 - Create appointment record
+
+09:29:58.260 - Mark slot as BOOKED
+
+09:29:58.270 - Transaction COMMITS - Lock released
+
+09:29:58.280 - Return success to Sarah
+
+John's Request Processing:
+09:29:58.266 - Token validated ✓
+
+09:29:58.276 - Patient and doctor fetched ✓
+
+09:29:58.286 - @Transactional begins
+
+09:29:58.287 - Tries to LOCK database row (WAITS because Sarah's transaction still has lock)
+
+09:29:58.290 - Sarah's lock releases
+
+09:29:58.291 - John's transaction acquires lock
+
+09:29:58.295 - Check if slot free: "SELECT... WHERE time = 9:30"
+
+09:29:58.300 - Result: FOUND Sarah's appointment! Slot BOOKED ✗
+
+09:29:58.305 - Throw SlotUnavailableException
+
+09:29:58.310 - Transaction ROLLS BACK
+
+09:29:58.320 - Return error to John
+
+Results:
+Sarah sees: ✓ "Appointment booked successfully!"
+John sees: ✗ "Sorry, this slot just got booked. Please choose another time."
+
+Database final state:
+
+text
+appointments table:
+ID: 501 (Sarah's appointment) ← ONLY ONE RECORD
+Why it worked: Database locking prevented double-booking!
+
+SCENARIO 3: Sarah Wants to Cancel
+2 Days Later (October 22)
+Sarah needs to cancel her follow-up appointment scheduled for November 5.
+
+What Sarah does:
+
+Opens app
+
+Goes to "My Appointments"
+
+Sees upcoming appointment on Nov 5
+
+Clicks "Cancel Appointment"
+
+System asks: "Are you sure?"
+
+Sarah clicks "Yes, Cancel"
+
+Her phone sends:
+
+text
+PUT http://localhost:8080/api/v1/appointments/cancel/501
+Authorization: Bearer sarah_token
+Server processes:
+
+Token checked: Sarah confirmed ✓
+
+AppointmentService fetches appointment 501
+
+Verifies Sarah owns this appointment (patient_id=1) ✓
+
+Checks current status: CONFIRMED (not already cancelled) ✓
+
+@Transactional begins:
+
+Update appointment:
+
+text
+appointments table:
+ID: 501
+status: CONFIRMED → CANCELLED
+AvailabilityService finds the time slot
+
+Updates:
+
+text
+availability_slots table:
+status: BOOKED → AVAILABLE
+CacheService deletes "doctor:availability:5" from Redis
+
+Transaction commits
+
+EmailService sends two emails:
+
+To Sarah:
+
+text
+Subject: Appointment Cancelled
+
+Your appointment on Nov 5 at 10:00 AM has been cancelled.
+You can book a new appointment anytime.
+To Dr. Mitchell:
+
+text
+Subject: Appointment Cancelled - Patient: Sarah Johnson
+
+Appointment on Nov 5 at 10:00 AM has been cancelled by patient.
+Time slot now available for other patients.
+Return success to Sarah
+
+Sarah sees: "Appointment cancelled successfully"
+
+Database updated:
+
+text
+appointments table:
+status: CANCELLED
+updated_at: 2025-10-22 14:30:00
+updated_by: 1 (Sarah)
+Next patient searching for Nov 5 at 10:00 AM:
+
+Will see this slot as AVAILABLE again!
+
+SCENARIO 4: Admin Emma Monitors System
+Emma (Admin) Checks Dashboard Daily
+What Emma does (October 20, 4:00 PM):
+
+Logs into admin portal
+
+Dashboard loads automatically
+
+Her computer sends:
+
+text
+GET http://localhost:8080/api/v1/admin/dashboard
+Authorization: Bearer emma_admin_token
+Server processes:
+
+Token checked: Emma, Role=ADMIN ✓
+
+@PreAuthorize("hasRole('ADMIN')") check:
+
+Only ADMIN role can access /api/v1/admin/** endpoints
+
+Emma has ADMIN role ✓ Allowed
+
+AdminController starts collecting stats:
+
+Query 1 - Total Patients:
+
+sql
+SELECT COUNT(*) FROM patients
+Result: 1,247 patients
+
+Query 2 - Total Doctors:
+
+sql
+SELECT COUNT(*) FROM doctors
+Result: 83 doctors
+
+Query 3 - Today's Appointments:
+
+sql
+SELECT COUNT(*) FROM appointments 
+WHERE DATE(appointment_time) = '2025-10-20'
+Result: 142 appointments today
+
+Query 4 - Completed Today:
+
+sql
+SELECT COUNT(*) FROM appointments 
+WHERE DATE(appointment_time) = '2025-10-20' 
+AND status = 'COMPLETED'
+Result: 105 completed
+
+Query 5 - Cancelled Today:
+
+sql
+SELECT COUNT(*) FROM appointments 
+WHERE DATE(appointment_time) = '2025-10-20' 
+AND status = 'CANCELLED'
+Result: 8 cancelled
+
+Query 6 - Popular Specializations:
+
+sql
+SELECT specialization, COUNT(*) 
+FROM appointments 
+JOIN doctors ON appointments.doctor_id = doctors.id
+WHERE DATE(appointment_time) = '2025-10-20'
+GROUP BY specialization
+ORDER BY COUNT(*) DESC
+Result:
+
+General Medicine: 45
+
+Cardiology: 28
+
+Neurology: 19
+
+...
+
+AdminService calculates occupancy:
+
+Total slots available today: 830
+
+Total booked: 142
+
+Occupancy rate: (142/830) × 100 = 17.1%
+
+Server returns:
+
+text
+Dashboard Data:
+Total Patients: 1,247
+Total Doctors: 83
+Today's Appointments: 142
+Completed: 105
+Cancelled: 8
+Pending: 29
+Occupancy Rate: 17.1%
+Popular Specializations:
+  1. General Medicine (45)
+  2. Cardiology (28)
+  3. Neurology (19)
+Emma sees: Beautiful dashboard with charts and numbers
+
+Key Background Processes (Happening Automatically)
+Process 1: Daily Reminder Emails
+Every day at 9:00 AM, server automatically runs:
+
+java
+@Scheduled(cron = "0 0 9 * * ?")
+public void sendDailyReminders()
+What happens:
+
+Scheduler wakes up: "Time to send reminders!"
+
+Calculates tomorrow's date
+
+Queries database:
+
+sql
+SELECT * FROM appointments 
+WHERE DATE(appointment_time) = tomorrow
+AND status IN ('CONFIRMED', 'PENDING')
+Gets list of all appointments for tomorrow
+
+For each appointment:
+
+Get patient email
+
+Get doctor name
+
+Get appointment time
+
+Compose email
+
+Send
+
+Example: On October 19 at 9:00 AM:
+
+Finds 142 appointments for October 20
+
+Sends 142 reminder emails
+
+Sarah gets her reminder about 9:30 AM appointment
+
+Process 2: Cache Expiration
+Redis automatically expires cached data after 30 minutes:
+
+Timeline:
+
+10:00 AM - Patient checks Dr. Mitchell's availability → Cached
+
+10:15 AM - Another patient checks → Returns from cache (fast!)
+
+10:25 AM - Another patient checks → Returns from cache (fast!)
+
+10:30 AM - Cache expires (30 minutes passed)
+
+10:31 AM - Patient checks → Cache miss → Queries database → Caches again
+
+Why 30 minutes?
+
+Balance between speed and freshness
+
+Most doctors' schedules don't change every minute
+
+30 minutes is recent enough
+
+Process 3: Database Connection Pooling
+System maintains 10 ready database connections:
+
+Without pooling:
+
+Request comes → Create new connection (50ms) → Query (10ms) → Close connection
+
+Next request → Create new connection (50ms) → Query (10ms) → Close connection
+
+Total per request: 60ms
+
+With pooling (our system):
+
+Server starts → Creates 10 connections and keeps them ready
+
+Request comes → Borrow existing connection (0ms) → Query (10ms) → Return to pool
+
+Next request → Borrow connection (0ms) → Query (10ms) → Return to pool
+
+Total per request: 10ms
+
+6x faster!
+
+How it works:
+
+10 connections always ready
+
+Request arrives, takes one connection
+
+After query, returns connection to pool
+
+Next request reuses same connection
+
+No time wasted creating/destroying connections
+
+Error Scenarios (What Goes Wrong)
+Error 1: Token Expired
+Situation: Sarah hasn't used app for 2 days. Her token expired.
+
+What Sarah does: Opens app, tries to view appointments
+
+Phone sends:
+
+text
+GET /api/v1/appointments/patient/1
+Authorization: Bearer expired_token
+Server checks:
+
+JwtAuthenticationFilter validates token
+
+Checks expiration: exp = October 18, 5:00 PM
+
+Current time: October 20, 10:00 AM
+
+Token expired!
+
+Rejects request
+
+Returns:
+
+text
+401 Unauthorized
+{
+  "message": "Your session has expired. Please login again."
+}
+Sarah sees: "Session expired" message with "Login" button
+
+Sarah logs in again → Gets new token → Can use app again
+
+Error 2: Unauthorized Access
+Situation: John (patient) tries to view Sarah's medical records
+
+John's phone sends:
+
+text
+GET /api/v1/medical-records/patient/1
+Authorization: Bearer john_token (John is user ID 15)
+Server checks:
+
+Token valid: John confirmed, ID=15 ✓
+
+MedicalRecordController checks:
+
+Who's requesting? John (ID=15)
+
+Whose records? Patient ID=1 (Sarah)
+
+Is 15 == 1? NO!
+
+Does John have DOCTOR or ADMIN role? NO (he's PATIENT)
+
+Security violation!
+
+Throws UnauthorizedException
+
+Returns:
+
+text
+403 Forbidden
+{
+  "message": "Access denied. You can only view your own medical records."
+}
+John sees: "Access denied" error
+
+System logs: "Unauthorized access attempt by user 15 to patient 1 records" (for security audit)
+
+Error 3: Invalid Data
+Situation: Sarah tries booking appointment but enters past date
+
+Phone sends:
+
+text
+POST /api/v1/appointments/book
+patientId: 1
+doctorId: 5
+time: 2025-10-15T10:00:00 (this is 5 days ago!)
+Server validates:
+
+@Valid annotation triggers validation
+
+@Future constraint on appointmentTime field:
+
+Checks: Is 2025-10-15 in the future?
+
+Current date: 2025-10-20
+
+NO! This is past!
+
+Validation fails
+
+Returns:
+
+text
+400 Bad Request
+{
+  "errors": [
+    {
+      "field": "appointmentTime",
+      "message": "Appointment time must be in the future"
+    }
+  ]
+}
+Sarah sees: Error message under date field: "Please select a future date"
+
+Complete System Overview
+Data Flow Summary:
+text
+User (Phone/Browser)
+    ↓ HTTP Request
+JwtAuthenticationFilter (checks token)
+    ↓ Valid token
+Controller (receives request)
+    ↓ Validates input
+Service (business logic)
+    ↓ Checks rules
+Repository (database operations)
+    ↓ Queries
+MySQL Database (stores data)
+    ↓ Returns results
+Repository
+    ↓ Maps to entities
+Service (formats data)
+    ↓ Prepares response
+Controller
+    ↓ HTTP Response
+User (sees result)
+Supporting Systems:
+Redis Cache: Fast memory storage for frequently accessed data
+Email Service: Sends notifications
+Scheduler: Runs automated tasks daily
+Security: Protects endpoints with JWT
+Audit: Tracks who did what when
+
+This is how the complete Healthcare Appointment System works from start to finish, handling users, bookings, cancellations, medical records, security, errors, and background tasks - all working together seamlessly
