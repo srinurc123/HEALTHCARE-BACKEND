@@ -11,7 +11,7 @@ public class CorsConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
             .allowedOrigins(
                 "http://localhost:3000",
-                "https://health-care-myapp.netlify.app"
+                "https://health-care-myapp.netlify.app","https://healthcare-frontend-pi.vercel.app/login"
             )
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowedHeaders("*")
